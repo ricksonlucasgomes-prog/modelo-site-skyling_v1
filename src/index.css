@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+/* Estilização da barra de rolagem para navegadores WebKit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px; /* Largura da barra de rolagem */
+}
+
+/* Estilização do fundo da barra de rolagem (a trilha) */
+::-webkit-scrollbar-track {
+  background: #0D0D0D; /* Cor de fundo escura, igual ao seu site */
+}
+
+/* Estilização do "polegar" da barra de rolagem (a parte que se move) */
+::-webkit-scrollbar-thumb {
+  background-color: #FFD700; /* Cor dourada do seu tema */
+  border-radius: 10px; /* Bordas arredondadas */
+  border: 2px solid #0D0D0D; /* Borda com a cor de fundo para dar espaçamento */
+}
+
+/* Estilização do "polegar" ao passar o mouse */
+::-webkit-scrollbar-thumb:hover {
+  background-color: #0057FF; /* Cor azul do seu tema ao passar o mouse */
+}
+
+/* Estilização para Firefox */
+/* Para navegadores Firefox, a estilização é um pouco diferente */
+html {
+  scrollbar-width: thin; /* Deixa a barra mais fina */
+  scrollbar-color: #FFD700 #0D0D0D; /* Cor do polegar e cor da trilha */
+}
