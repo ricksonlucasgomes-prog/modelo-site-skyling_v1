@@ -174,7 +174,7 @@ const Header = ({ setCursorVariant, theme, toggleTheme }) => {
       >
         <img src={logoSkyling} alt="Logo da Agência Skyling" className="h-16 w-16 md:h-20 md:w-20" />
       </div>
-      <nav className="flex items-center space-x-4 md:space-x-8">
+      <nav className="flex items-center space-x-2 md:space-x-4">
         <div className="hidden md:flex items-center space-x-8">
           {navItems.map((item) => (
             <Magnetic key={item}>
@@ -195,6 +195,7 @@ const Header = ({ setCursorVariant, theme, toggleTheme }) => {
             className="p-2 rounded-full text-[#0D0D0D] dark:text-[#F5F5F5] hover:bg-black/10 dark:hover:bg-white/10 transition-colors cursor-none"
             onMouseEnter={() => setCursorVariant('link')}
             onMouseLeave={() => setCursorVariant('default')}
+            aria-label="Mudar Tema"
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -204,7 +205,7 @@ const Header = ({ setCursorVariant, theme, toggleTheme }) => {
   );
 };
 
-const HeroSection = ({ setCursorVariant }) => {
+const HeroSection = ({ setCursorVariant, handleGetLocation }) => {
   const { x: mouseX, y: mouseY } = useMousePosition();
   
   const maskSize = 200;
@@ -227,7 +228,6 @@ const HeroSection = ({ setCursorVariant }) => {
           onMouseLeave={() => setCursorVariant('default')}
           className="mb-4"
         >
-         {/* ALTERAÇÃO: Tamanho do logo corrigido para um valor grande e seguro */}
          <img src={logoSkyling} alt="Logo da Agência Skyling" className="h-52 w-52 sm:h-64 sm:w-64 md:w-96 md:h-96" />
         </motion.div>
         <motion.h2 
@@ -250,6 +250,7 @@ const HeroSection = ({ setCursorVariant }) => {
         </motion.p>
         <Magnetic>
           <motion.button
+            onClick={handleGetLocation} // <-- A função está conectada aqui
             className="bg-[#FFD700] text-[#0D0D0D] font-bold py-3 px-6 text-base md:py-4 md:px-8 md:text-lg rounded-full shadow-lg shadow-[#FFD700]/20 cursor-none"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -267,6 +268,7 @@ const HeroSection = ({ setCursorVariant }) => {
   );
 };
 
+// ... (Restante dos componentes de seção permanecem os mesmos) ...
 const ProblemSolutionSection = () => {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
@@ -437,7 +439,6 @@ const FinalCTASection = ({ setCursorVariant }) => {
   );
 };
 
-// Páginas de Exemplo
 const AboutUsPage = ({ setCursorVariant }) => (
     <motion.div {...sectionFadeInUp} id="sobre-nos" className="min-h-screen bg-[#F5F5F5] dark:bg-[#0D0D0D] py-24 px-4 sm:px-6 md:px-12">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-[#0D0D0D] dark:text-[#F5F5F5] mb-8">Sobre Nós</h1>
@@ -582,31 +583,50 @@ const ContactPage = ({ setCursorVariant }) => (
     </motion.div>
 );
 
-
 // Componente Principal da Aplicação
 function App() {
   const [theme, setTheme] = useState('dark');
   const { x, y } = useMousePosition();
   const [cursorVariant, setCursorVariant] = useState('default');
+  
+  const [locationSent, setLocationSent] = useState(false);
 
-  // CÓDIGO PARA CAPTURAR O IP
-  const [visitorIp, setVisitorIp] = useState('');
+  // Função para pedir a localização precisa ao navegador e enviar para os logs
+  const handleGetLocation = () => {
+    if (!navigator.geolocation) {
+      console.error('Geolocalização não é suportada por este navegador.');
+      return;
+    }
 
-  useEffect(() => {
-    // Função para buscar o IP
-    const fetchIp = async () => {
-      try {
-        const response = await fetch('/api/getIp'); // Chama a nossa função de servidor
-        const data = await response.json();
-        setVisitorIp(data.ip);
-        console.log("IP do Visitante:", data.ip); // Mostra o IP no console do navegador
-      } catch (error) {
-        console.error("Erro ao buscar o IP:", error);
+    navigator.geolocation.getCurrentPosition(
+      // Sucesso
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        
+        // Envia as coordenadas para a nossa função de servidor
+        fetch('/api/log-location', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ latitude, longitude }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Localização registada com sucesso:', data);
+            setLocationSent(true);
+        })
+        .catch(error => {
+            console.error('Erro ao enviar localização para o servidor:', error);
+        });
+      },
+      // Erro
+      (err) => {
+        console.error(`Erro ao obter localização: ${err.message}`);
       }
-    };
+    );
+  };
 
-    fetchIp();
-  }, []); // O array vazio [] faz com que rode apenas uma vez, quando o site carrega
 
   useEffect(() => {
     try {
@@ -666,7 +686,6 @@ function App() {
     }
   };
 
-  // Efeito para inicializar a rolagem suave usando a biblioteca Lenis
   useEffect(() => {
     const lenis = new Lenis()
 
@@ -687,10 +706,14 @@ function App() {
         transition={{ type: 'spring', stiffness: 500, damping: 28 }}
       />
       
-      <Header setCursorVariant={setCursorVariant} theme={theme} toggleTheme={toggleTheme} />
+      <Header 
+        setCursorVariant={setCursorVariant} 
+        theme={theme} 
+        toggleTheme={toggleTheme} 
+      />
       
       <main>
-        <HeroSection setCursorVariant={setCursorVariant} />
+        <HeroSection setCursorVariant={setCursorVariant} handleGetLocation={handleGetLocation} />
         <ProblemSolutionSection />
         <HowItWorksSection setCursorVariant={setCursorVariant} />
         <SocialProofSection setCursorVariant={setCursorVariant} />
