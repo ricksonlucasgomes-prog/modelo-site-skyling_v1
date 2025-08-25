@@ -589,6 +589,25 @@ function App() {
   const { x, y } = useMousePosition();
   const [cursorVariant, setCursorVariant] = useState('default');
 
+  // CÓDIGO PARA CAPTURAR O IP
+  const [visitorIp, setVisitorIp] = useState('');
+
+  useEffect(() => {
+    // Função para buscar o IP
+    const fetchIp = async () => {
+      try {
+        const response = await fetch('/api/getIp'); // Chama a nossa função de servidor
+        const data = await response.json();
+        setVisitorIp(data.ip);
+        console.log("IP do Visitante:", data.ip); // Mostra o IP no console do navegador
+      } catch (error) {
+        console.error("Erro ao buscar o IP:", error);
+      }
+    };
+
+    fetchIp();
+  }, []); // O array vazio [] faz com que rode apenas uma vez, quando o site carrega
+
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('theme');
